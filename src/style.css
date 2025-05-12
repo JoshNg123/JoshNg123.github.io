@@ -1,0 +1,169 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+}
+
+.background-section {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+    url("../public/background.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.mainPageButton,
+.createOrDonateButton {
+  text-decoration: none;
+  cursor: pointer; /* Optional: show pointer cursor */
+}
+
+/* Add underline on hover */
+.mainPageButton:hover,
+.createOrDonateButton:hover {
+  text-decoration: underline;
+}
+
+.container-title {
+  min-height: 93vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: "Roboto", sans-serif;
+  color: #ffffff;
+}
+
+.navigation {
+  display: flex;
+  justify-content: space-around;
+  background-color: #8aaae5;
+  height: 3rem;
+  font-family: "Roboto", sans-serif;
+}
+
+.enableEthereumButton,
+.disconnectEthereumButton {
+  align-self: center;
+  margin: 0 auto;
+  padding: 0.3rem 0.6rem;
+  border-radius: 10px;
+  border: none;
+  font-family: "Roboto";
+  font-size: 1.6rem;
+  background-color: #f7c5cc;
+  font-weight: bold;
+  width: 100%;
+  cursor: pointer;
+}
+
+.pill {
+  color: #222;
+  background: #8aaae5;
+  padding: 0.5rem 1.5rem;
+  border-radius: 1.5rem;
+  margin-bottom: 1.2rem;
+  font-size: 1.3rem;
+  font-weight: 500;
+  box-shadow: 0 2px 12px 0 rgba(138, 170, 229, 0.07);
+  display: inline-block;
+  /* transition: background 0.2s, color 0.2s; */
+}
+.pill:last-child {
+  margin-bottom: 0;
+}
+
+.pill-invert {
+  color: #fff;
+  background: #8aaae5;
+}
+@media (max-width: 900px) {
+  .why-section,
+  .instruction-section {
+    align-items: center !important;
+    padding: 2vw !important;
+  }
+  div[style*="flex-direction: row"] {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+}
+
+.createOrDonateButton,
+.mainPageButton {
+  align-self: center;
+  margin: 0 auto;
+  border-radius: 10px;
+  padding: 0.3rem 0.7rem;
+  border: none;
+  font-family: "Roboto";
+  font-size: 1.2rem;
+  background-color: #f0ffff;
+  font-weight: 500;
+  font-weight: bolder;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+.campaign-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  padding: 2rem;
+}
+.campaign-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px #ede8f5;
+  padding: 1.2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.campaign-card:hover {
+  box-shadow: 0 4px 16px #13adb733;
+}
+.timeline {
+  margin: 1rem 0;
+  border-left: 3px solid #13adb7;
+  padding-left: 1rem;
+}
+.milestone {
+  position: relative;
+  margin-bottom: 1rem;
+}
+.milestone-dot {
+  position: absolute;
+  left: -1.2rem;
+  top: 0.4rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  background: #13adb7;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+

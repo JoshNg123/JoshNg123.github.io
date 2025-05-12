@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="src/style.css" />
+    <title>Crowdfunding Dapp</title>
+    <script type="module" src="src/main.js"></script>
+    <script type="module" src="src/detect.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/progressbar.js"></script>
+    <script>
+      const switchToActionPage = () => {
+        document.querySelector(".background-section").style.display = "none";
+        document.querySelector(".info-section").style.display = "none";
+        document.querySelector(".create-campaign-section").style.display =
+          "flex";
+        document.querySelector(".campaign-section").style.display = "block";
+      };
+
+      const switchToMainPage = () => {
+        document.querySelector(".background-section").style.display = "block";
+        document.querySelector(".info-section").style.display = "flex";
+        document.querySelector(".create-campaign-section").style.display =
+          "none";
+        document.querySelector(".campaign-section").style.display = "none";
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script type="module">
+      import {
+        connectWalletAndInitContract,
+        getContract,
+      } from "./src/detect.js";
+      import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.5/ethers.min.js";
+
+      // ====== DYNAMIC MILESTONE LOGIC ======
+      const milestoneContainer = document.getElementById("milestoneContainer");
+      const addMilestoneBtn = document.getElementById("addMilestoneBtn");
+      let milestoneCount = 0;
+      const MIN_MILESTONES = 1;
+      const MAX_MILESTONES = 3;
+
+      function createMilestoneField(idx) {
+        const div = document.createElement("div");
+        div.className = "milestone-field";
+        div.style.position = "relative";
+        div.style.marginBottom = "1rem";
+        div.style.padding = "1rem";
+        div.style.background = "#f8fafd";
+        div.style.border = "1px solid #dbeafe";
+        div.style.borderRadius = "6px";
+        div.innerHTML = `
+          <label style="display:block;">Milestone Description:</label>
+          <input type="text" name="milestoneDesc" required placeholder="Milestone description" style="width:100%;padding:0.4rem;"/>
+          <label style="display:block;margin-top:0.5rem;">Milestone Target (ETH):</label>
+          <input type="number" name="milestoneTarget" min="0.01" step="0.01" required placeholder="Target amount" style="width:100%;padding:0.4rem;"/>
+          <button type="button" class="remove-milestone-btn"
+            style="position:absolute;top:1rem;right:1rem; background:#ffb4b4; color:#a00; border-radius:4px; font-weight:bold; padding:0.2rem 0.7rem; border:none; font-size:0.9rem;${
+              idx === 0 ? "display:none;" : ""
+            }">
+            Remove
+          </button>
+        `;
+        div.querySelector(".remove-milestone-btn").onclick = function () {
+          div.remove();
+          milestoneCount--;
+          updateAddButtonState();
+          updateRemoveButtons();
+        };
+        return div;
+      }
+
+      function updateAddButtonState() {
+        addMilestoneBtn.disabled = milestoneCount >= MAX_MILESTONES;
+      }
+      function updateRemoveButtons() {
+        const fields = milestoneContainer.querySelectorAll(".milestone-field");
+        fields.forEach((field, idx) => {
+          const btn = field.querySelector(".remove-milestone-btn");
+          btn.style.display =
+            fields.length > MIN_MILESTONES ? "inline-block" : "none";
+        });
+      }
+      function initializeMilestones() {
+        milestoneContainer.innerHTML = "";
+        milestoneCount = 0;
+        addMilestone();
+      }
+      function addMilestone() {
+        if (milestoneCount < MAX_MILESTONES) {
+          const field = createMilestoneField(milestoneCount);
+          milestoneContainer.appendChild(field);
+          milestoneCount++;
+          updateAddButtonState();
+          updateRemoveButtons();
+        }
+      }
+      addMilestoneBtn.addEventListener("click", addMilestone);
+      initializeMilestones();
+
+      // Wallet connection button
+      document
+        .querySelector(".enableEthereumButton")
+        .addEventListener("click", async () => {
+          try {
+            await connectWalletAndInitContract();
+          } catch (err) {
+            console.error(err);
+          }
+        });
+
+      // Form submission
+      document
+        .getElementById("createCampaignForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          // Milestone minimum check (optional)
+          const milestoneFields = document.querySelectorAll(".milestone-field");
+          if (milestoneFields.length < 1) {
+            alert("Please add at least one milestone.");
+            return;
+          }
+
+          let contract;
+          try {
+            contract = getContract();
+          } catch (err) {
+            alert(err.message);
+            return;
+          }
+
+          try {
+            // Gather campaign data
+            const title = document.getElementById("title").value;
+            const description = document.getElementById("description").value;
+            const goal = ethers.parseEther(
+              document.getElementById("goal").value
+            );
+            const durationDays = document.getElementById("duration").value;
+            const duration = durationDays * 86400; // Convert days to seconds
+
+            // Gather milestone data
+            const milestoneDescriptions = Array.from(
+              document.getElementsByName("milestoneDesc")
+            ).map((input) => input.value);
+            const milestoneTargets = Array.from(
+              document.getElementsByName("milestoneTarget")
+            ).map((input) => ethers.parseEther(input.value));
+
+            // Send transaction
+            const tx = await contract.createCampaign(
+              title,
+              description,
+              goal,
+              duration,
+              milestoneDescriptions,
+              milestoneTargets
+            );
+            await tx.wait();
+            alert("Campaign created successfully!");
+            this.reset();
+            // re-initialize milestones if needed
+            if (typeof initializeMilestones === "function")
+              initializeMilestones();
+          } catch (err) {
+            console.error(err);
+            alert(
+              "Error creating campaign: " +
+                (err.data && err.data.message ? err.data.message : err.message)
+            );
+          }
+        });
+    </script>
+  </head>
+  <body>
+    <div class="navigation">
+      <div style="display: flex; justify-content: space-between">
+        <button class="mainPageButton" onclick="switchToMainPage()">
+          OpenRaise
+        </button>
+      </div>
+      <div style="display: flex; justify-content: space-between">
+        <button class="createOrDonateButton" onclick="switchToActionPage()">
+          Create or Donate Now!
+        </button>
+      </div>
+    </div>
+    <div class="background-section">
+      <div class="container-title">
+        <h1 style="text-align: center; font-size: 3.2rem">
+          <span style="color: #8aaae5">Happiness </span>comes from <br />
+          <span style="color: #8aaae5">your action</span>
+        </h1>
+        <h3>Be part of the breakthrough and make someone's dream come true</h3>
+      </div>
+    </div>
+    <div
+      class="info-section"
+      style="
+        display: flex;
+        height: 100vh;
+        flex-direction: row;
+        background: linear-gradient(90deg, #8aaae5 0%, #fff 100%);
+        font-family: 'Segoe UI', Arial, sans-serif;
+      "
+    >
+      <div
+        class="why-section"
+        data-aos="fade-right"
+        style="
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: flex-end;
+          padding-right: 6vw;
+          background: rgba(255, 255, 255, 0.7);
+          box-shadow: 0 0 32px 0 rgba(138, 170, 229, 0.08);
+        "
+      >
+        <h1
+          style="
+            color: #8aaae5;
+            font-size: 2.7rem;
+            margin-bottom: 1.5rem;
+            letter-spacing: 2px;
+            font-weight: 700;
+          "
+        >
+          WHY OPENRAISE?
+        </h1>
+        <h2 class="pill">WE ENABLE TRANSPARENCY</h2>
+        <h2 class="pill">WE EMPOWER DREAMERS</h2>
+        <h2 class="pill">WE BUILD COMMUNITY</h2>
+      </div>
+      <div
+        class="instruction-section"
+        data-aos="fade-left"
+        style="
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: flex-start;
+          padding-left: 6vw;
+          background: rgba(138, 170, 229, 0.09);
+        "
+      >
+        <h1
+          style="
+            color: #222;
+            font-size: 2.7rem;
+            margin-bottom: 1.5rem;
+            letter-spacing: 2px;
+            font-weight: 700;
+          "
+        >
+          HOW TO USE OPENRAISE?
+        </h1>
+        <h2 class="pill pill-invert">HEAD TO CREATE OR DONATE NOW!</h2>
+        <h2 class="pill pill-invert">CREATE YOUR CAMPAIGN</h2>
+        <h2 class="pill pill-invert">DONATE TO CAMPAIGNS</h2>
+      </div>
+    </div>
+    <div
+      class="create-campaign-section"
+      style="
+        display: none;
+        padding: 2rem;
+        min-height: 85vh;
+        background: #ffffff;
+        justify-content: space-around;
+      "
+    >
+      <div
+        style="
+          background: #fff;
+          border: 3px solid #8aaae5;
+          border-radius: 10px;
+          padding: 2rem;
+          width: 30%;
+        "
+      >
+        <button class="enableEthereumButton">Connect Ethereum Wallet</button>
+
+        <div style="display: flex">
+          <h4 style="margin-top: 2rem; font-size: 1.1rem">Account:</h4>
+          <h4
+            class="showAccount"
+            style="margin-top: 2rem; font-size: 1.1rem; margin-left: 1rem"
+          ></h4>
+        </div>
+
+        <div style="color: #d32f2f; margin-top: 1.5rem">
+          You must connect your wallet to create or view/donate to campaigns.
+        </div>
+
+        <button class="disconnectEthereumButton" style="margin-top: 2rem">
+          Disconnect Wallet
+        </button>
+      </div>
+
+      <!-- Create Campaign Form (Right) -->
+      <div style="width: 40%">
+        <div
+          style="
+            background: #fff;
+            border: 3px solid #8aaae5;
+            border-radius: 10px;
+            padding: 2rem;
+            font-family: 'Roboto', sans-serif;
+          "
+        >
+          <h2 style="text-align: center; margin-bottom: 1.2rem">
+            Create Campaign
+          </h2>
+          <form id="createCampaignForm" autocomplete="off">
+            <label for="title" style="display: block; margin-top: 1rem"
+              >Title:</label
+            >
+            <input
+              type="text"
+              id="title"
+              name="title"
+              required
+              style="
+                width: 100%;
+                padding: 0.5rem;
+                border-radius: 6px;
+                border: 1px solid #f7c5cc;
+                font-size: 1rem;
+              "
+            />
+
+            <label for="description" style="display: block; margin-top: 1rem"
+              >Description:</label
+            >
+            <textarea
+              id="description"
+              name="description"
+              required
+              style="
+                width: 100%;
+                padding: 0.5rem;
+                border-radius: 6px;
+                border: 1px solid #f7c5cc;
+                font-size: 1rem;
+              "
+            ></textarea>
+
+            <label for="goal" style="display: block; margin-top: 1rem"
+              >Funding Goal (SepoliaETH):</label
+            >
+            <input
+              type="number"
+              id="goal"
+              name="goal"
+              min="0.01"
+              step="0.01"
+              required
+              style="
+                width: 100%;
+                padding: 0.5rem;
+                border-radius: 6px;
+                border: 1px solid #f7c5cc;
+                font-size: 1rem;
+              "
+            />
+
+            <label for="duration" style="display: block; margin-top: 1rem"
+              >Duration (days):</label
+            >
+            <input
+              type="number"
+              id="duration"
+              name="duration"
+              min="1"
+              step="1"
+              required
+              style="
+                width: 100%;
+                padding: 0.5rem;
+                border-radius: 6px;
+                border: 1px solid #f7c5cc;
+                font-size: 1rem;
+              "
+            />
+
+            <div id="milestoneContainer" style="margin-top: 1.2rem"></div>
+            <button
+              type="button"
+              id="addMilestoneBtn"
+              style="
+                margin-top: 0.5rem;
+                background: #f7c5cc;
+                color: #000;
+                border: none;
+                border-radius: 6px;
+                font-size: 1rem;
+                font-weight: bold;
+                padding: 0.5rem 1.2rem;
+                cursor: pointer;
+              "
+            >
+              Add Milestone
+            </button>
+            <button
+              type="submit"
+              style="
+                margin-top: 1.2rem;
+                margin-left: 1rem;
+                background: #f7c5cc;
+                color: #000;
+                border: none;
+                border-radius: 6px;
+                font-size: 1rem;
+                font-weight: bold;
+                padding: 0.5rem 1.2rem;
+                cursor: pointer;
+              "
+            >
+              Create Campaign
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="campaign-section" style="display: none">
+      <h2 style="text-align: center; margin-top: 2rem">Campaigns</h2>
+      <div class="campaign-list"></div>
+    </div>
+
+    <!-- Modal for Campaign Detail -->
+    <div
+      id="modal-backdrop"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+      "
+    >
+      <div
+        id="campaign-modal"
+        style="
+          position: relative;
+          background: #fff;
+          max-width: 600px;
+          margin: 4rem auto;
+          padding: 2rem;
+          border-radius: 10px;
+          box-shadow: 0 2px 16px #0002;
+        "
+      >
+        <button
+          onclick="closeDetail()"
+          style="
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #888;
+          "
+        >
+          &times;
+        </button>
+        <h3 id="detail-title"></h3>
+        <p id="detail-description"></p>
+        <p><b>Goal:</b> <span id="detail-goal"></span></p>
+        <p><b>Pledged:</b> <span id="detail-pledged"></span></p>
+        <p><b>Deadline:</b> <span id="detail-deadline"></span></p>
+        <div
+          id="progress-bar-container"
+          style="width: 100%; max-width: 700px; margin: 0 auto"
+        ></div>
+        <div style="margin-top: 3.7rem">
+          <input
+            type="number"
+            id="donate-amount"
+            min="0.01"
+            step="0.01"
+            placeholder="Amount in ETH"
+            style="padding: 0.5rem; margin-right: 0.5rem"
+          />
+          <button
+            id="donate-btn"
+            style="
+              padding: 0.5rem 1rem;
+              background: #13adb7;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+            "
+          >
+            Donate
+          </button>
+        </div>
+        <div
+          id="donate-status"
+          style="margin-top: 0.5rem; color: #13adb7"
+        ></div>
+      </div>
+    </div>
+  </body>
+  <script>
+    window.addEventListener("load", function () {
+      AOS.init({
+        duration: 900,
+        once: true,
+      });
+    });
+  </script>
+</html>
+
