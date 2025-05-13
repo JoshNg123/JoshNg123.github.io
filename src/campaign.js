@@ -30,6 +30,8 @@ export async function loadCampaigns() {
 export async function showCampaignDetail(campaignId) {
   const contract = contractInstance || getContract();
   const campaign = await contract.campaigns(campaignId);
+  const currentUser = await contract.runner.getAddress();
+
   document.getElementById("detail-title").textContent = campaign.title;
   document.getElementById("detail-description").textContent =
     campaign.description;
@@ -125,6 +127,71 @@ export async function showCampaignDetail(campaignId) {
 
   // Add Target marker (green) at 100%
   addMarker(1, "#43a047", "Target", goalAmount.toFixed(4), true);
+
+  // Add these variables
+  const now = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+  const afterDeadline = now >= Number(campaign.deadline);
+  const goalMet = campaign.pledged >= campaign.goal;
+  const isCreator =
+    currentUser.toLowerCase() === campaign.creator.toLowerCase();
+
+  // Check if user is a donor
+  const userContribution = await contract.contributions(
+    campaignId,
+    currentUser
+  );
+  const isDonor = userContribution > 0n;
+
+  // Get button elements (add these IDs to your modal HTML)
+  const donateBtn = document.getElementById("donate-btn");
+  const withdrawBtn = document.getElementById("withdraw-btn");
+  const refundBtn = document.getElementById("refund-btn");
+
+  // Donate button logic
+  if (!afterDeadline) {
+    donateBtn.style.display = "block";
+  } else {
+    donateBtn.style.display = "none";
+  }
+
+  // Withdraw button (creator only + conditions)
+  if (isCreator && afterDeadline && goalMet) {
+    withdrawBtn.style.display = "block";
+  } else {
+    withdrawBtn.style.display = "none";
+  }
+
+  // Refund button (donors only + conditions)
+  if (isDonor && afterDeadline && !goalMet) {
+    refundBtn.style.display = "block";
+  } else {
+    refundBtn.style.display = "none";
+  }
+
+  // Add click handlers for withdraw/refund
+  withdrawBtn.onclick = async () => {
+    try {
+      const tx = await contract.withdrawFunds(campaignId);
+      await tx.wait();
+      alert("Funds withdrawn successfully!");
+      closeDetail();
+    } catch (error) {
+      console.error("Withdraw error:", error);
+      alert("Withdrawal failed: " + error.message);
+    }
+  };
+
+  refundBtn.onclick = async () => {
+    try {
+      const tx = await contract.refund(campaignId);
+      await tx.wait();
+      alert("Refund successful!");
+      closeDetail();
+    } catch (error) {
+      console.error("Refund error:", error);
+      alert("Refund failed: " + error.message);
+    }
+  };
 
   // Show modal
   document.getElementById("modal-backdrop").style.display = "block";

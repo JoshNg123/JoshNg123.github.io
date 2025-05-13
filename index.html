@@ -512,7 +512,7 @@
           id="progress-bar-container"
           style="width: 100%; max-width: 700px; margin: 0 auto"
         ></div>
-        <div style="margin-top: 3.7rem">
+        <div style="margin-top: 3.7rem; display: flex; gap: 0.5rem">
           <input
             type="number"
             id="donate-amount"
@@ -525,11 +525,12 @@
             id="donate-btn"
             style="
               padding: 0.5rem 1rem;
-              background: #13adb7;
-              color: white;
+              background: #f7c5cc;
+              color: black;
               border: none;
               border-radius: 4px;
               cursor: pointer;
+              display: none;
             "
           >
             Donate
@@ -537,8 +538,36 @@
         </div>
         <div
           id="donate-status"
-          style="margin-top: 0.5rem; color: #13adb7"
+          style="margin-top: 0.5rem; color: #f7c5cc"
         ></div>
+        <button
+          id="withdraw-btn"
+          style="
+            padding: 0.5rem 1rem;
+            background: #f7c5cc;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: none;
+          "
+        >
+          Withdraw Funds
+        </button>
+        <button
+          id="refund-btn"
+          style="
+            padding: 0.5rem 1rem;
+            background: #f7c5cc;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: none;
+          "
+        >
+          Request Refund
+        </button>
       </div>
     </div>
   </body>
