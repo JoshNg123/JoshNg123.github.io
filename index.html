@@ -3,15 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="
-        default-src 'self';
-        script-src 'self' https://cdnjs.cloudflare.com;
-        style-src 'self' 'unsafe-inline';
-        img-src 'self' data:;
-      "
-    />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self'" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,10 +11,10 @@
       href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
       rel="stylesheet"
     />
-    <link
+    <!-- <link
       href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css"
       rel="stylesheet"
-    />
+    /> -->
     <link rel="stylesheet" href="src/style.css" />
     <title>Crowdfunding Dapp</title>
     <script type="module" src="src/main.js"></script>
