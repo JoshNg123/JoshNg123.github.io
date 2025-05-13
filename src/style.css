@@ -79,6 +79,7 @@ body {
 }
 
 .pill {
+  font-family: "Roboto";
   color: #222;
   background: #8aaae5;
   padding: 0.5rem 1.5rem;
