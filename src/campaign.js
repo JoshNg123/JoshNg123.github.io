@@ -16,12 +16,17 @@ export async function loadCampaigns() {
     const deadline = new Date(
       Number(campaign.deadline) * 1000
     ).toLocaleDateString();
+    const deadlineTime = Number(campaign.deadline) * 1000;
+    console.log(deadlineTime);
+    console.log(Date.now());
+    const isClosed = Date.now() > deadlineTime;
+
     const card = document.createElement("div");
     card.className = "campaign-card";
     card.innerHTML = `
-      <h3>${campaign.title}</h3>
-      <p>Deadline: ${deadline}</p>
-    `;
+  <h3>${campaign.title}${isClosed ? " (Closed)" : ""}</h3>
+  <p>Deadline: ${new Date(deadlineTime).toLocaleDateString()}</p>
+`;
     card.onclick = () => showCampaignDetail(i);
     campaignsEl.appendChild(card);
   }
